@@ -12,9 +12,9 @@ from typing import Dict, Any, Optional
 
 # Configuration
 BASE_URL = "https://quiz-mastery-1.preview.emergentagent.com/api"
-TEST_USER_EMAIL = "sarah.johnson@techcorp.com"
-TEST_USER_USERNAME = "sarah_johnson"
-TEST_USER_PASSWORD = "SecurePass123!"
+TEST_USER_EMAIL = "demo@test.com"
+TEST_USER_USERNAME = "demouser"
+TEST_USER_PASSWORD = "demo123"
 
 class InterviewPrepAPITester:
     def __init__(self):
