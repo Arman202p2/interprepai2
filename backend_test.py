@@ -87,7 +87,7 @@ class InterviewPrepAPITester:
             "email": TEST_USER_EMAIL,
             "password": TEST_USER_PASSWORD,
             "selected_topics": ["Python", "JavaScript", "System Design"],
-            "target_companies": ["Google", "Microsoft", "Amazon"]
+            "target_companies": ["Google", "Microsoft"]
         }
         
         success, data, status_code = self.make_request("POST", "/users/register", user_data)
