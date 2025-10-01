@@ -11,7 +11,7 @@ import time
 from typing import Dict, Any, Optional
 
 # Configuration
-BASE_URL = "https://placementpal-3.preview.emergentagent.com/api"
+BASE_URL = "https://quiz-mastery-1.preview.emergentagent.com/api"
 TEST_USER_EMAIL = "sarah.johnson@techcorp.com"
 TEST_USER_USERNAME = "sarah_johnson"
 TEST_USER_PASSWORD = "SecurePass123!"
