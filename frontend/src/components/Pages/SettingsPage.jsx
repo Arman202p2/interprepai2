@@ -1,102 +1,115 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { toast } from "sonner";
-import { 
-  Settings, 
-  User, 
-  Bell, 
-  Clock, 
-  Palette, 
+import {
+  Settings,
+  User,
+  Bell,
+  Clock,
+  Palette,
   Shield,
   Save,
   Edit,
   Check,
-  X
+  X,
 } from "lucide-react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "../ui/card";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 import { Switch } from "../ui/switch";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../ui/select";
 import { Checkbox } from "../ui/checkbox";
 import { ScrollArea } from "../ui/scroll-area";
 import { Badge } from "../ui/badge";
 import { useAppContext } from "../../App";
 
 const SettingsPage = () => {
-  const { currentUser, availableTopics, availableCompanies, API } = useAppContext();
-  
+  const { currentUser, availableTopics, availableCompanies, API } =
+    useAppContext();
+
   const [settings, setSettings] = useState({
     // Profile settings
     username: currentUser?.username || "",
     email: currentUser?.email || "",
-    
+
     // Quiz settings
     defaultQuestions: 10,
-    defaultDifficulty: "",
+    defaultDifficulty: "all",
     enableTimer: true,
     timerDuration: 60,
-    
+
     // Notification settings
     emailNotifications: true,
     weeklyProgress: true,
     streakReminders: true,
-    
+
     // Theme settings
     theme: "light",
-    
+
     // Privacy settings
     profileVisible: true,
     shareProgress: false,
-    
+
     // Topics and companies
     selectedTopics: currentUser?.selected_topics || [],
-    selectedCompanies: currentUser?.target_companies || []
+    selectedCompanies: currentUser?.target_companies || [],
   });
 
   const [editing, setEditing] = useState({
     profile: false,
     topics: false,
-    companies: false
+    companies: false,
   });
 
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (currentUser) {
-      setSettings(prev => ({
+      setSettings((prev) => ({
         ...prev,
         username: currentUser.username,
         email: currentUser.email,
         selectedTopics: currentUser.selected_topics || [],
-        selectedCompanies: currentUser.target_companies || []
+        selectedCompanies: currentUser.target_companies || [],
       }));
     }
   }, [currentUser]);
 
   const handleSettingChange = (key, value) => {
-    setSettings(prev => ({
+    setSettings((prev) => ({
       ...prev,
-      [key]: value
+      [key]: value,
     }));
   };
 
   const toggleTopic = (topic) => {
-    setSettings(prev => ({
+    setSettings((prev) => ({
       ...prev,
       selectedTopics: prev.selectedTopics.includes(topic)
-        ? prev.selectedTopics.filter(t => t !== topic)
-        : [...prev.selectedTopics, topic]
+        ? prev.selectedTopics.filter((t) => t !== topic)
+        : [...prev.selectedTopics, topic],
     }));
   };
 
   const toggleCompany = (company) => {
-    setSettings(prev => ({
+    setSettings((prev) => ({
       ...prev,
       selectedCompanies: prev.selectedCompanies.includes(company)
-        ? prev.selectedCompanies.filter(c => c !== company)
-        : [...prev.selectedCompanies, company]
+        ? prev.selectedCompanies.filter((c) => c !== company)
+        : [...prev.selectedCompanies, company],
     }));
   };
 
@@ -105,7 +118,7 @@ const SettingsPage = () => {
     try {
       // Update profile info - in real app this would be separate endpoints
       toast.success("Profile updated successfully!");
-      setEditing(prev => ({ ...prev, profile: false }));
+      setEditing((prev) => ({ ...prev, profile: false }));
     } catch (error) {
       toast.error("Failed to update profile");
     } finally {
@@ -118,10 +131,10 @@ const SettingsPage = () => {
     try {
       await axios.put(`${API}/users/${currentUser.id}/topics`, {
         selected_topics: settings.selectedTopics,
-        custom_topics: []
+        custom_topics: [],
       });
       toast.success("Topics updated successfully!");
-      setEditing(prev => ({ ...prev, topics: false }));
+      setEditing((prev) => ({ ...prev, topics: false }));
     } catch (error) {
       toast.error("Failed to update topics");
     } finally {
@@ -133,10 +146,10 @@ const SettingsPage = () => {
     setLoading(true);
     try {
       await axios.put(`${API}/users/${currentUser.id}/companies`, {
-        companies: settings.selectedCompanies
+        companies: settings.selectedCompanies,
       });
       toast.success("Companies updated successfully!");
-      setEditing(prev => ({ ...prev, companies: false }));
+      setEditing((prev) => ({ ...prev, companies: false }));
     } catch (error) {
       toast.error("Failed to update companies");
     } finally {
@@ -148,11 +161,15 @@ const SettingsPage = () => {
     setLoading(true);
     try {
       // Save all settings - in real app these would be separate API calls
-      await Promise.all([
-        settings.selectedTopics !== currentUser?.selected_topics && saveTopics(),
-        settings.selectedCompanies !== currentUser?.target_companies && saveCompanies()
-      ].filter(Boolean));
-      
+      await Promise.all(
+        [
+          settings.selectedTopics !== currentUser?.selected_topics &&
+            saveTopics(),
+          settings.selectedCompanies !== currentUser?.target_companies &&
+            saveCompanies(),
+        ].filter(Boolean)
+      );
+
       toast.success("All settings saved successfully!");
     } catch (error) {
       toast.error("Failed to save some settings");
@@ -190,7 +207,9 @@ const SettingsPage = () => {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => setEditing(prev => ({ ...prev, profile: !prev.profile }))}
+                  onClick={() =>
+                    setEditing((prev) => ({ ...prev, profile: !prev.profile }))
+                  }
                 >
                   <Edit className="w-4 h-4 mr-1" />
                   {editing.profile ? "Cancel" : "Edit"}
@@ -205,7 +224,9 @@ const SettingsPage = () => {
                   <Input
                     id="username"
                     value={settings.username}
-                    onChange={(e) => handleSettingChange("username", e.target.value)}
+                    onChange={(e) =>
+                      handleSettingChange("username", e.target.value)
+                    }
                     disabled={!editing.profile}
                   />
                 </div>
@@ -215,12 +236,14 @@ const SettingsPage = () => {
                     id="email"
                     type="email"
                     value={settings.email}
-                    onChange={(e) => handleSettingChange("email", e.target.value)}
+                    onChange={(e) =>
+                      handleSettingChange("email", e.target.value)
+                    }
                     disabled={!editing.profile}
                   />
                 </div>
               </div>
-              
+
               {editing.profile && (
                 <div className="flex space-x-2">
                   <Button onClick={saveProfile} disabled={loading}>
@@ -239,15 +262,19 @@ const SettingsPage = () => {
                 <Clock className="w-5 h-5 text-green-600" />
                 <CardTitle className="text-xl">Quiz Preferences</CardTitle>
               </div>
-              <CardDescription>Set your default quiz configuration</CardDescription>
+              <CardDescription>
+                Set your default quiz configuration
+              </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="defaultQuestions">Default Questions</Label>
-                  <Select 
-                    value={settings.defaultQuestions.toString()} 
-                    onValueChange={(value) => handleSettingChange("defaultQuestions", parseInt(value))}
+                  <Select
+                    value={settings.defaultQuestions.toString()}
+                    onValueChange={(value) =>
+                      handleSettingChange("defaultQuestions", parseInt(value))
+                    }
                   >
                     <SelectTrigger>
                       <SelectValue />
@@ -264,15 +291,17 @@ const SettingsPage = () => {
 
                 <div className="space-y-2">
                   <Label htmlFor="defaultDifficulty">Default Difficulty</Label>
-                  <Select 
-                    value={settings.defaultDifficulty} 
-                    onValueChange={(value) => handleSettingChange("defaultDifficulty", value)}
+                  <Select
+                    value={settings.defaultDifficulty}
+                    onValueChange={(value) =>
+                      handleSettingChange("defaultDifficulty", value)
+                    }
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="All Levels" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">All Levels</SelectItem>
+                      <SelectItem value="all">All Levels</SelectItem>
                       <SelectItem value="Easy">Easy</SelectItem>
                       <SelectItem value="Medium">Medium</SelectItem>
                       <SelectItem value="Hard">Hard</SelectItem>
@@ -286,24 +315,35 @@ const SettingsPage = () => {
                 <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
                   <div>
                     <Label>Enable Timer by Default</Label>
-                    <p className="text-sm text-slate-500">Automatically start timer for new quizzes</p>
+                    <p className="text-sm text-slate-500">
+                      Automatically start timer for new quizzes
+                    </p>
                   </div>
                   <Switch
                     checked={settings.enableTimer}
-                    onCheckedChange={(checked) => handleSettingChange("enableTimer", checked)}
+                    onCheckedChange={(checked) =>
+                      handleSettingChange("enableTimer", checked)
+                    }
                   />
                 </div>
 
                 {settings.enableTimer && (
                   <div className="space-y-2 ml-4">
-                    <Label htmlFor="timerDuration">Default Timer Duration (seconds)</Label>
+                    <Label htmlFor="timerDuration">
+                      Default Timer Duration (seconds)
+                    </Label>
                     <Input
                       id="timerDuration"
                       type="number"
                       min="30"
                       max="300"
                       value={settings.timerDuration}
-                      onChange={(e) => handleSettingChange("timerDuration", parseInt(e.target.value))}
+                      onChange={(e) =>
+                        handleSettingChange(
+                          "timerDuration",
+                          parseInt(e.target.value)
+                        )
+                      }
                       className="w-32"
                     />
                   </div>
@@ -319,22 +359,43 @@ const SettingsPage = () => {
                 <Bell className="w-5 h-5 text-yellow-600" />
                 <CardTitle className="text-xl">Notifications</CardTitle>
               </div>
-              <CardDescription>Choose what notifications you'd like to receive</CardDescription>
+              <CardDescription>
+                Choose what notifications you'd like to receive
+              </CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
               {[
-                { key: "emailNotifications", label: "Email Notifications", desc: "Receive updates via email" },
-                { key: "weeklyProgress", label: "Weekly Progress Report", desc: "Get weekly summaries of your progress" },
-                { key: "streakReminders", label: "Streak Reminders", desc: "Reminders to maintain your study streak" }
+                {
+                  key: "emailNotifications",
+                  label: "Email Notifications",
+                  desc: "Receive updates via email",
+                },
+                {
+                  key: "weeklyProgress",
+                  label: "Weekly Progress Report",
+                  desc: "Get weekly summaries of your progress",
+                },
+                {
+                  key: "streakReminders",
+                  label: "Streak Reminders",
+                  desc: "Reminders to maintain your study streak",
+                },
               ].map((notification) => (
-                <div key={notification.key} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+                <div
+                  key={notification.key}
+                  className="flex items-center justify-between p-3 bg-slate-50 rounded-lg"
+                >
                   <div>
                     <Label>{notification.label}</Label>
-                    <p className="text-sm text-slate-500">{notification.desc}</p>
+                    <p className="text-sm text-slate-500">
+                      {notification.desc}
+                    </p>
                   </div>
                   <Switch
                     checked={settings[notification.key]}
-                    onCheckedChange={(checked) => handleSettingChange(notification.key, checked)}
+                    onCheckedChange={(checked) =>
+                      handleSettingChange(notification.key, checked)
+                    }
                   />
                 </div>
               ))}
@@ -348,21 +409,36 @@ const SettingsPage = () => {
                 <Shield className="w-5 h-5 text-purple-600" />
                 <CardTitle className="text-xl">Privacy & Sharing</CardTitle>
               </div>
-              <CardDescription>Control your privacy and data sharing preferences</CardDescription>
+              <CardDescription>
+                Control your privacy and data sharing preferences
+              </CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
               {[
-                { key: "profileVisible", label: "Public Profile", desc: "Make your profile visible to other users" },
-                { key: "shareProgress", label: "Share Progress", desc: "Allow others to see your learning progress" }
+                {
+                  key: "profileVisible",
+                  label: "Public Profile",
+                  desc: "Make your profile visible to other users",
+                },
+                {
+                  key: "shareProgress",
+                  label: "Share Progress",
+                  desc: "Allow others to see your learning progress",
+                },
               ].map((privacy) => (
-                <div key={privacy.key} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+                <div
+                  key={privacy.key}
+                  className="flex items-center justify-between p-3 bg-slate-50 rounded-lg"
+                >
                   <div>
                     <Label>{privacy.label}</Label>
                     <p className="text-sm text-slate-500">{privacy.desc}</p>
                   </div>
                   <Switch
                     checked={settings[privacy.key]}
-                    onCheckedChange={(checked) => handleSettingChange(privacy.key, checked)}
+                    onCheckedChange={(checked) =>
+                      handleSettingChange(privacy.key, checked)
+                    }
                   />
                 </div>
               ))}
@@ -380,13 +456,21 @@ const SettingsPage = () => {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => setEditing(prev => ({ ...prev, topics: !prev.topics }))}
+                  onClick={() =>
+                    setEditing((prev) => ({ ...prev, topics: !prev.topics }))
+                  }
                 >
-                  {editing.topics ? <X className="w-4 h-4" /> : <Edit className="w-4 h-4" />}
+                  {editing.topics ? (
+                    <X className="w-4 h-4" />
+                  ) : (
+                    <Edit className="w-4 h-4" />
+                  )}
                 </Button>
               </div>
               <CardDescription>
-                {editing.topics ? "Select your topics" : `${settings.selectedTopics.length} topics selected`}
+                {editing.topics
+                  ? "Select your topics"
+                  : `${settings.selectedTopics.length} topics selected`}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -395,13 +479,19 @@ const SettingsPage = () => {
                   <ScrollArea className="h-40 w-full rounded-md border border-slate-200 p-3">
                     <div className="space-y-2">
                       {availableTopics.map((topic) => (
-                        <div key={topic} className="flex items-center space-x-2">
+                        <div
+                          key={topic}
+                          className="flex items-center space-x-2"
+                        >
                           <Checkbox
                             id={`topic-${topic}`}
                             checked={settings.selectedTopics.includes(topic)}
                             onCheckedChange={() => toggleTopic(topic)}
                           />
-                          <Label htmlFor={`topic-${topic}`} className="text-sm cursor-pointer">
+                          <Label
+                            htmlFor={`topic-${topic}`}
+                            className="text-sm cursor-pointer"
+                          >
                             {topic}
                           </Label>
                         </div>
@@ -413,9 +503,11 @@ const SettingsPage = () => {
                       <Check className="w-3 h-3 mr-1" />
                       Save
                     </Button>
-                    <Button 
-                      variant="outline" 
-                      onClick={() => setEditing(prev => ({ ...prev, topics: false }))}
+                    <Button
+                      variant="outline"
+                      onClick={() =>
+                        setEditing((prev) => ({ ...prev, topics: false }))
+                      }
                       size="sm"
                     >
                       Cancel
@@ -426,7 +518,11 @@ const SettingsPage = () => {
                 <div className="space-y-2">
                   <div className="flex flex-wrap gap-1">
                     {settings.selectedTopics.map((topic) => (
-                      <Badge key={topic} variant="secondary" className="text-xs">
+                      <Badge
+                        key={topic}
+                        variant="secondary"
+                        className="text-xs"
+                      >
                         {topic}
                       </Badge>
                     ))}
@@ -444,13 +540,24 @@ const SettingsPage = () => {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => setEditing(prev => ({ ...prev, companies: !prev.companies }))}
+                  onClick={() =>
+                    setEditing((prev) => ({
+                      ...prev,
+                      companies: !prev.companies,
+                    }))
+                  }
                 >
-                  {editing.companies ? <X className="w-4 h-4" /> : <Edit className="w-4 h-4" />}
+                  {editing.companies ? (
+                    <X className="w-4 h-4" />
+                  ) : (
+                    <Edit className="w-4 h-4" />
+                  )}
                 </Button>
               </div>
               <CardDescription>
-                {editing.companies ? "Select target companies" : `${settings.selectedCompanies.length} companies selected`}
+                {editing.companies
+                  ? "Select target companies"
+                  : `${settings.selectedCompanies.length} companies selected`}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -459,13 +566,21 @@ const SettingsPage = () => {
                   <ScrollArea className="h-40 w-full rounded-md border border-slate-200 p-3">
                     <div className="space-y-2">
                       {availableCompanies.map((company) => (
-                        <div key={company} className="flex items-center space-x-2">
+                        <div
+                          key={company}
+                          className="flex items-center space-x-2"
+                        >
                           <Checkbox
                             id={`company-${company}`}
-                            checked={settings.selectedCompanies.includes(company)}
+                            checked={settings.selectedCompanies.includes(
+                              company
+                            )}
                             onCheckedChange={() => toggleCompany(company)}
                           />
-                          <Label htmlFor={`company-${company}`} className="text-sm cursor-pointer">
+                          <Label
+                            htmlFor={`company-${company}`}
+                            className="text-sm cursor-pointer"
+                          >
                             {company}
                           </Label>
                         </div>
@@ -473,13 +588,19 @@ const SettingsPage = () => {
                     </div>
                   </ScrollArea>
                   <div className="flex space-x-2">
-                    <Button onClick={saveCompanies} disabled={loading} size="sm">
+                    <Button
+                      onClick={saveCompanies}
+                      disabled={loading}
+                      size="sm"
+                    >
                       <Check className="w-3 h-3 mr-1" />
                       Save
                     </Button>
-                    <Button 
-                      variant="outline" 
-                      onClick={() => setEditing(prev => ({ ...prev, companies: false }))}
+                    <Button
+                      variant="outline"
+                      onClick={() =>
+                        setEditing((prev) => ({ ...prev, companies: false }))
+                      }
                       size="sm"
                     >
                       Cancel
@@ -490,7 +611,11 @@ const SettingsPage = () => {
                 <div className="space-y-2">
                   <div className="flex flex-wrap gap-1">
                     {settings.selectedCompanies.map((company) => (
-                      <Badge key={company} variant="secondary" className="text-xs">
+                      <Badge
+                        key={company}
+                        variant="secondary"
+                        className="text-xs"
+                      >
                         {company}
                       </Badge>
                     ))}
@@ -511,8 +636,8 @@ const SettingsPage = () => {
             <CardContent>
               <div className="space-y-2">
                 <Label>Theme</Label>
-                <Select 
-                  value={settings.theme} 
+                <Select
+                  value={settings.theme}
                   onValueChange={(value) => handleSettingChange("theme", value)}
                 >
                   <SelectTrigger>

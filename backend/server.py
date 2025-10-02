@@ -11,6 +11,8 @@ import uuid
 from datetime import datetime, timezone, timedelta
 import google.generativeai as genai
 import asyncio
+print("File loaded")
+
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
@@ -22,6 +24,17 @@ db = client[os.environ['DB_NAME']]
 
 # Create the main app without a prefix
 app = FastAPI()
+
+@app.on_event("startup")
+async def check_mongodb():
+    print("Startup function running")
+    try:
+        await db.command("ping")
+        print("MongoDB connection: Successful")
+    except Exception as e:
+        print("MongoDB connection: Failed")
+        print(e)
+
 
 # Create a router with the /api prefix
 api_router = APIRouter(prefix="/api")
@@ -179,9 +192,22 @@ async def register_user(user: UserCreate):
 
 @api_router.post("/users/login")
 async def login_user(login: UserLogin):
-    user = await db.users.find_one({"email": login.email, "password": login.password})
+    # Find user by email
+    user = await db.users.find_one({"email": login.email})
+    
     if not user:
-        raise HTTPException(status_code=401, detail="Invalid credentials")
+        raise HTTPException(
+            status_code=401, 
+            detail="No account found with this email"
+        )
+    
+    # Verify password
+    if user["password"] != login.password:  # TODO: Use proper password hashing
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid password"
+        )
+    
     return User(**user)
 
 @api_router.get("/users/{user_id}")

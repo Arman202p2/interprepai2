@@ -2,23 +2,35 @@ import React, { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { toast } from "sonner";
-import { 
-  BookOpen, 
-  Settings, 
-  Users, 
-  Building2, 
-  Timer, 
+import {
+  BookOpen,
+  Settings,
+  Users,
+  Building2,
+  Timer,
   Target,
   Play,
   ArrowRight,
   Zap,
-  Star
+  Star,
 } from "lucide-react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "../ui/card";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../ui/select";
 import { Switch } from "../ui/switch";
 import { Badge } from "../ui/badge";
 import { Checkbox } from "../ui/checkbox";
@@ -28,57 +40,58 @@ import { useAppContext } from "../../App";
 const PracticePage = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { currentUser, availableTopics, availableCompanies, mentors, API } = useAppContext();
-  
+  const { currentUser, availableTopics, availableCompanies, mentors, API } =
+    useAppContext();
+
   // Get pre-selected mentor from navigation state
   const preselectedMentor = location.state?.selectedMentor;
-  
+
   const [quizConfig, setQuizConfig] = useState({
     topics: currentUser?.selected_topics || [],
     companies: currentUser?.target_companies || [],
     num_questions: 10,
-    difficulty: "",
+    difficulty: "all",
     enable_timer: true,
-    mentor_id: preselectedMentor?.id || null
+    mentor_id: preselectedMentor?.id || null,
   });
-  
+
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (preselectedMentor) {
-      setQuizConfig(prev => ({
+      setQuizConfig((prev) => ({
         ...prev,
         mentor_id: preselectedMentor.id,
-        topics: preselectedMentor.expertise.filter(skill => 
+        topics: preselectedMentor.expertise.filter((skill) =>
           availableTopics.includes(skill)
-        )
+        ),
       }));
       toast.success(`Quiz configured for mentor: ${preselectedMentor.name}`);
     }
   }, [preselectedMentor, availableTopics]);
 
   const handleConfigChange = (key, value) => {
-    setQuizConfig(prev => ({
+    setQuizConfig((prev) => ({
       ...prev,
-      [key]: value
+      [key]: value,
     }));
   };
 
   const toggleTopic = (topic) => {
-    setQuizConfig(prev => ({
+    setQuizConfig((prev) => ({
       ...prev,
       topics: prev.topics.includes(topic)
-        ? prev.topics.filter(t => t !== topic)
-        : [...prev.topics, topic]
+        ? prev.topics.filter((t) => t !== topic)
+        : [...prev.topics, topic],
     }));
   };
 
   const toggleCompany = (company) => {
-    setQuizConfig(prev => ({
+    setQuizConfig((prev) => ({
       ...prev,
       companies: prev.companies.includes(company)
-        ? prev.companies.filter(c => c !== company)
-        : [...prev.companies, company]
+        ? prev.companies.filter((c) => c !== company)
+        : [...prev.companies, company],
     }));
   };
 
@@ -95,18 +108,20 @@ const PracticePage = () => {
         user_id: currentUser.id,
         topics: quizConfig.topics,
         num_questions: parseInt(quizConfig.num_questions),
-        difficulty: quizConfig.difficulty || null,
-        companies: quizConfig.companies.length > 0 ? quizConfig.companies : null,
+        difficulty:
+          quizConfig.difficulty === "all" ? null : quizConfig.difficulty,
+        companies:
+          quizConfig.companies.length > 0 ? quizConfig.companies : null,
         enable_timer: quizConfig.enable_timer,
-        mentor_id: quizConfig.mentor_id
+        mentor_id: quizConfig.mentor_id,
       });
 
       // Store quiz data and navigate to quiz page
-      navigate("/quiz", { 
-        state: { 
+      navigate("/quiz", {
+        state: {
           quizData: response.data,
-          config: quizConfig
-        } 
+          config: quizConfig,
+        },
       });
     } catch (error) {
       const message = error.response?.data?.detail || "Failed to start quiz";
@@ -116,7 +131,7 @@ const PracticePage = () => {
     }
   };
 
-  const selectedMentor = mentors.find(m => m.id === quizConfig.mentor_id);
+  const selectedMentor = mentors.find((m) => m.id === quizConfig.mentor_id);
 
   return (
     <div className="p-4 md:p-8 max-w-6xl mx-auto space-y-8">
@@ -126,10 +141,13 @@ const PracticePage = () => {
           <div className="w-12 h-12 bg-gradient-to-br from-green-600 to-emerald-600 rounded-xl flex items-center justify-center">
             <BookOpen className="w-6 h-6 text-white" />
           </div>
-          <h1 className="text-4xl font-bold text-slate-900">Practice Session</h1>
+          <h1 className="text-4xl font-bold text-slate-900">
+            Practice Session
+          </h1>
         </div>
         <p className="text-xl text-slate-600 max-w-3xl mx-auto">
-          Configure your personalized practice session with questions from expert mentors
+          Configure your personalized practice session with questions from
+          expert mentors
         </p>
       </div>
 
@@ -143,12 +161,18 @@ const PracticePage = () => {
                 <div className="flex items-center space-x-4">
                   <div className="text-4xl">{selectedMentor.avatar}</div>
                   <div className="flex-1">
-                    <h3 className="text-lg font-bold text-slate-900">{selectedMentor.name}</h3>
-                    <p className="text-slate-600">{selectedMentor.title} at {selectedMentor.company}</p>
+                    <h3 className="text-lg font-bold text-slate-900">
+                      {selectedMentor.name}
+                    </h3>
+                    <p className="text-slate-600">
+                      {selectedMentor.title} at {selectedMentor.company}
+                    </p>
                     <div className="flex items-center space-x-4 mt-2">
                       <div className="flex items-center space-x-1">
                         <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                        <span className="text-sm font-medium">{selectedMentor.rating}</span>
+                        <span className="text-sm font-medium">
+                          {selectedMentor.rating}
+                        </span>
                       </div>
                       <Badge variant="secondary">
                         {selectedMentor.questionCount} questions
@@ -187,22 +211,26 @@ const PracticePage = () => {
                     min="1"
                     max="50"
                     value={quizConfig.num_questions}
-                    onChange={(e) => handleConfigChange("num_questions", e.target.value)}
+                    onChange={(e) =>
+                      handleConfigChange("num_questions", e.target.value)
+                    }
                     className="h-12"
                   />
                 </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="difficulty">Difficulty Level</Label>
-                  <Select 
-                    value={quizConfig.difficulty} 
-                    onValueChange={(value) => handleConfigChange("difficulty", value)}
+                  <Select
+                    value={quizConfig.difficulty}
+                    onValueChange={(value) =>
+                      handleConfigChange("difficulty", value)
+                    }
                   >
                     <SelectTrigger className="h-12">
                       <SelectValue placeholder="All Levels" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">All Levels</SelectItem>
+                      <SelectItem value="all">All Levels</SelectItem>
                       <SelectItem value="Easy">Easy</SelectItem>
                       <SelectItem value="Medium">Medium</SelectItem>
                       <SelectItem value="Hard">Hard</SelectItem>
@@ -218,12 +246,16 @@ const PracticePage = () => {
                   <Timer className="w-5 h-5 text-slate-600" />
                   <div>
                     <Label>Enable Timer</Label>
-                    <p className="text-sm text-slate-500">Add time pressure to simulate real interviews</p>
+                    <p className="text-sm text-slate-500">
+                      Add time pressure to simulate real interviews
+                    </p>
                   </div>
                 </div>
                 <Switch
                   checked={quizConfig.enable_timer}
-                  onCheckedChange={(checked) => handleConfigChange("enable_timer", checked)}
+                  onCheckedChange={(checked) =>
+                    handleConfigChange("enable_timer", checked)
+                  }
                 />
               </div>
 
@@ -261,7 +293,10 @@ const PracticePage = () => {
                 <ScrollArea className="h-32 w-full rounded-md border border-slate-200 bg-white p-3">
                   <div className="grid grid-cols-2 gap-2">
                     {availableCompanies.map((company) => (
-                      <div key={company} className="flex items-center space-x-2">
+                      <div
+                        key={company}
+                        className="flex items-center space-x-2"
+                      >
                         <Checkbox
                           id={`company-${company}`}
                           checked={quizConfig.companies.includes(company)}
@@ -287,7 +322,9 @@ const PracticePage = () => {
           {/* Quiz Summary */}
           <Card className="border-0 shadow-lg">
             <CardHeader>
-              <CardTitle className="text-lg text-slate-900">Quiz Summary</CardTitle>
+              <CardTitle className="text-lg text-slate-900">
+                Quiz Summary
+              </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-3">
@@ -295,7 +332,7 @@ const PracticePage = () => {
                   <span className="text-sm text-slate-600">Questions</span>
                   <Badge variant="outline">{quizConfig.num_questions}</Badge>
                 </div>
-                
+
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-slate-600">Difficulty</span>
                   <Badge variant="outline">
@@ -305,7 +342,9 @@ const PracticePage = () => {
 
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-slate-600">Timer</span>
-                  <Badge variant={quizConfig.enable_timer ? "default" : "secondary"}>
+                  <Badge
+                    variant={quizConfig.enable_timer ? "default" : "secondary"}
+                  >
                     {quizConfig.enable_timer ? "Enabled" : "Disabled"}
                   </Badge>
                 </div>
@@ -323,7 +362,9 @@ const PracticePage = () => {
                 {selectedMentor && (
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-slate-600">Mentor</span>
-                    <Badge variant="default">{selectedMentor.name.split(' ')[0]}</Badge>
+                    <Badge variant="default">
+                      {selectedMentor.name.split(" ")[0]}
+                    </Badge>
                   </div>
                 )}
               </div>
@@ -357,7 +398,9 @@ const PracticePage = () => {
                   <Users className="w-5 h-5 mr-2 text-blue-600" />
                   Choose a Mentor
                 </CardTitle>
-                <CardDescription>Get questions from industry experts</CardDescription>
+                <CardDescription>
+                  Get questions from industry experts
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
@@ -370,8 +413,12 @@ const PracticePage = () => {
                       <div className="flex items-center space-x-3">
                         <div className="text-2xl">{mentor.avatar}</div>
                         <div className="flex-1 min-w-0">
-                          <p className="font-medium text-slate-900 truncate">{mentor.name}</p>
-                          <p className="text-sm text-slate-500 truncate">{mentor.company}</p>
+                          <p className="font-medium text-slate-900 truncate">
+                            {mentor.name}
+                          </p>
+                          <p className="text-sm text-slate-500 truncate">
+                            {mentor.company}
+                          </p>
                         </div>
                       </div>
                     </button>
