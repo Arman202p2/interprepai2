@@ -9,7 +9,7 @@ from pydantic import BaseModel, Field
 from typing import List, Optional, Dict, Any
 import uuid
 from datetime import datetime, timezone, timedelta
-from emergentintegrations.llm.chat import LlmChat, UserMessage
+import google.generativeai as genai
 import asyncio
 
 ROOT_DIR = Path(__file__).parent
@@ -119,45 +119,35 @@ class CompanySelection(BaseModel):
 # ============= HELPER FUNCTIONS =============
 
 async def generate_ai_answer(question_text: str, correct_answer: str, explanation: str = None) -> str:
-    """Generate AI answer using Gemini"""
+    """Generate AI answer using Gemini native API"""
     try:
-        chat = LlmChat(
-            api_key=GEMINI_API_KEY,
-            session_id=str(uuid.uuid4()),
-            system_message="You are an expert interview coach. Provide detailed, accurate answers to interview questions."
-        ).with_model("gemini", "gemini-2.0-flash")
-        
         prompt = f"Question: {question_text}\n"
         if explanation:
             prompt += f"Context: {explanation}\n"
         prompt += f"Correct Answer: {correct_answer}\n\nProvide a comprehensive explanation of this answer."
-        
-        user_message = UserMessage(text=prompt)
-        response = await chat.send_message(user_message)
-        return response
+
+        model = genai.GenerativeModel("gemini-2.0-flash")
+        response = model.generate_content(prompt)
+        # Gemini responses may be synchronous; if used within async, wrap with a thread executor if needed.
+        return response.text if hasattr(response, "text") else correct_answer
     except Exception as e:
         logging.error(f"AI answer generation error: {str(e)}")
         return correct_answer
 
 async def validate_answer_with_ai(question_text: str, correct_answer: str, user_answer: str) -> bool:
-    """Validate non-MCQ answer using AI"""
+    """Validate non-MCQ answer using Gemini API directly"""
     try:
-        chat = LlmChat(
-            api_key=GEMINI_API_KEY,
-            session_id=str(uuid.uuid4()),
-            system_message="You are an expert evaluator. Compare user answers with correct answers and determine if they are essentially the same."
-        ).with_model("gemini", "gemini-2.0-flash")
-        
-        prompt = f"""Question: {question_text}
-Correct Answer: {correct_answer}
-User's Answer: {user_answer}
-
-Evaluate if the user's answer is correct. Consider semantic similarity, not just exact match.
-Respond with only 'CORRECT' or 'INCORRECT'."""
-        
-        user_message = UserMessage(text=prompt)
-        response = await chat.send_message(user_message)
-        return "CORRECT" in response.upper()
+        prompt = (
+            f"Question: {question_text}\n"
+            f"Correct Answer: {correct_answer}\n"
+            f"User's Answer: {user_answer}\n\n"
+            "Evaluate if the user's answer is correct. Consider semantic similarity, not just exact match.\n"
+            "Respond with only 'CORRECT' or 'INCORRECT'."
+        )
+        model = genai.GenerativeModel("gemini-2.0-flash")
+        response = model.generate_content(prompt)
+        result_text = response.text if hasattr(response, "text") else ""
+        return "CORRECT" in result_text.upper()
     except Exception as e:
         logging.error(f"AI validation error: {str(e)}")
         return user_answer.lower().strip() == correct_answer.lower().strip()
@@ -537,16 +527,13 @@ async def get_checklist(user_id: str):
 @api_router.post("/ai/chat")
 async def ai_chat(chat_data: AIChat):
     try:
-        chat = LlmChat(
-            api_key=GEMINI_API_KEY,
-            session_id=chat_data.session_id,
-            system_message="You are a helpful interview preparation assistant. Help users with their interview questions, provide study tips, and motivate them."
-        ).with_model("gemini", "gemini-2.0-flash")
-        
-        user_message = UserMessage(text=chat_data.message)
-        response = await chat.send_message(user_message)
-        
-        return {"response": response}
+        prompt = (
+            "You are a helpful interview preparation assistant. Help users with their interview questions, provide study tips, and motivate them.\n\n"
+            f"User: {chat_data.message}"
+        )
+        model = genai.GenerativeModel("gemini-2.0-flash")
+        response = model.generate_content(prompt)
+        return {"response": response.text if hasattr(response, "text") else ""}
     except Exception as e:
         logging.error(f"AI chat error: {str(e)}")
         raise HTTPException(status_code=500, detail="AI chat error")

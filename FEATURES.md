@@ -172,7 +172,7 @@
 - **Frontend**: React with Tailwind CSS
 - **Database**: MongoDB
 - **AI**: Google Gemini 2.0 Flash
-- **Libraries**: emergentintegrations, beautifulsoup4, selenium
+- **Libraries**:  beautifulsoup4, selenium
 
 ## 🚀 API Endpoints
 
