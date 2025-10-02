@@ -1,19 +1,25 @@
 import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import { toast } from "sonner";
-import { 
-  MessageCircle, 
-  Send, 
-  Bot, 
-  User, 
+import {
+  MessageCircle,
+  Send,
+  Bot,
+  User,
   Lightbulb,
   BookOpen,
   Target,
   Zap,
   Trash2,
-  Copy
+  Copy,
 } from "lucide-react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "../ui/card";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Badge } from "../ui/badge";
@@ -32,23 +38,27 @@ const ChatPage = () => {
     {
       icon: <Lightbulb className="w-4 h-4" />,
       text: "Give me tips for technical interviews",
-      prompt: "What are some essential tips for preparing for technical interviews at FAANG companies?"
+      prompt:
+        "What are some essential tips for preparing for technical interviews at FAANG companies?",
     },
     {
       icon: <BookOpen className="w-4 h-4" />,
       text: "Explain system design concepts",
-      prompt: "Can you explain the key concepts I should know for system design interviews?"
+      prompt:
+        "Can you explain the key concepts I should know for system design interviews?",
     },
     {
       icon: <Target className="w-4 h-4" />,
       text: "Help with behavioral questions",
-      prompt: "How should I structure my answers for behavioral interview questions using the STAR method?"
+      prompt:
+        "How should I structure my answers for behavioral interview questions using the STAR method?",
     },
     {
       icon: <Zap className="w-4 h-4" />,
       text: "Algorithm practice strategy",
-      prompt: "What's the best strategy to practice algorithms and data structures for coding interviews?"
-    }
+      prompt:
+        "What's the best strategy to practice algorithms and data structures for coding interviews?",
+    },
   ];
 
   useEffect(() => {
@@ -62,8 +72,8 @@ const ChatPage = () => {
         id: 1,
         role: "assistant",
         content: `Hello ${currentUser?.username}! 👋 I'm your AI interview preparation assistant. I can help you with:\n\n• Technical interview questions and explanations\n• System design concepts and patterns\n• Behavioral interview preparation\n• Algorithm and data structure guidance\n• Company-specific interview tips\n\nWhat would you like to explore today?`,
-        timestamp: new Date().toISOString()
-      }
+        timestamp: new Date().toISOString(),
+      },
     ]);
   }, [currentUser]);
 
@@ -78,39 +88,127 @@ const ChatPage = () => {
       id: Date.now(),
       role: "user",
       content: messageText,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     };
 
-    setMessages(prev => [...prev, userMessage]);
+    setMessages((prev) => [...prev, userMessage]);
     setInputMessage("");
     setLoading(true);
 
+    // Create a message object for the assistant's response
+    const assistantMessageId = Date.now() + 1;
+    const assistantMessage = {
+      id: assistantMessageId,
+      role: "assistant",
+      content: "",
+      timestamp: new Date().toISOString(),
+      isStreaming: true,
+    };
+    setMessages((prev) => [...prev, assistantMessage]);
+
     try {
-      const response = await axios.post(`${API}/ai/chat`, {
-        user_id: currentUser.id,
-        message: messageText,
-        session_id: sessionId
+      const response = await fetch(`${API}/ai/chat`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          user_id: currentUser.id,
+          message: messageText,
+          session_id: sessionId,
+        }),
       });
 
-      const assistantMessage = {
-        id: Date.now() + 1,
-        role: "assistant",
-        content: response.data.response,
-        timestamp: new Date().toISOString()
-      };
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let accumulatedContent = "";
 
-      setMessages(prev => [...prev, assistantMessage]);
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+
+        const chunk = decoder.decode(value);
+        const lines = chunk.split("\n");
+
+        for (const line of lines) {
+          if (line.startsWith("data: ")) {
+            const payload = line.slice(6).trim();
+
+            // --- PATCH: handle [DONE] marker (string not JSON)
+            if (payload === "[DONE]") {
+              setMessages((prev) =>
+                prev.map((msg) =>
+                  msg.id === assistantMessageId
+                    ? { ...msg, isStreaming: false }
+                    : msg
+                )
+              );
+              setLoading(false);
+              return; // Don't process further lines
+            }
+
+            try {
+              const data = JSON.parse(payload);
+              if (data.error) {
+                throw new Error(data.error);
+              }
+              if (data.chunk) {
+                accumulatedContent += data.chunk;
+                setMessages((prev) =>
+                  prev.map((msg) =>
+                    msg.id === assistantMessageId
+                      ? { ...msg, content: accumulatedContent }
+                      : msg
+                  )
+                );
+              }
+            } catch (e) {
+              console.error("Error parsing SSE data:", e);
+            }
+          }
+        }
+      }
+
+      // Update the message to remove streaming status
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg.id === assistantMessageId ? { ...msg, isStreaming: false } : msg
+        )
+      );
     } catch (error) {
       console.error("Chat error:", error);
+      let errorContent =
+        "I apologize, but I encountered an error. Please try again in a moment.";
+
+      // Handle specific error cases
+      if (error.response) {
+        const status = error.response.status;
+        const detail = error.response.data.detail;
+
+        if (status === 429) {
+          errorContent =
+            detail ||
+            "Service is busy. Please wait a minute before sending another message.";
+          toast.error(errorContent, { duration: 5000 });
+        } else if (status === 400) {
+          errorContent =
+            detail || "Invalid message. Please try rephrasing your question.";
+          toast.error(errorContent);
+        } else {
+          toast.error("Failed to send message");
+        }
+      } else {
+        toast.error("Network error. Please check your connection.");
+      }
+
       const errorMessage = {
         id: Date.now() + 1,
         role: "assistant",
-        content: "I apologize, but I encountered an error. Please try again in a moment.",
+        content: errorContent,
         timestamp: new Date().toISOString(),
-        isError: true
+        isError: true,
       };
-      setMessages(prev => [...prev, errorMessage]);
-      toast.error("Failed to send message");
+      setMessages((prev) => [...prev, errorMessage]);
     } finally {
       setLoading(false);
     }
@@ -129,8 +227,8 @@ const ChatPage = () => {
         id: 1,
         role: "assistant",
         content: `Chat cleared! How can I help you with your interview preparation today?`,
-        timestamp: new Date().toISOString()
-      }
+        timestamp: new Date().toISOString(),
+      },
     ]);
     toast.success("Chat history cleared");
   };
@@ -141,9 +239,9 @@ const ChatPage = () => {
   };
 
   const formatTime = (timestamp) => {
-    return new Date(timestamp).toLocaleTimeString('en-US', {
-      hour: '2-digit',
-      minute: '2-digit'
+    return new Date(timestamp).toLocaleTimeString("en-US", {
+      hour: "2-digit",
+      minute: "2-digit",
     });
   };
 
@@ -155,7 +253,9 @@ const ChatPage = () => {
           <div className="w-12 h-12 bg-gradient-to-br from-purple-600 to-pink-600 rounded-xl flex items-center justify-center">
             <MessageCircle className="w-6 h-6 text-white" />
           </div>
-          <h1 className="text-4xl font-bold text-slate-900">AI Interview Assistant</h1>
+          <h1 className="text-4xl font-bold text-slate-900">
+            AI Interview Assistant
+          </h1>
         </div>
         <p className="text-lg text-slate-600">
           Get personalized help with your interview preparation
@@ -172,7 +272,9 @@ const ChatPage = () => {
                 <div className="flex items-center space-x-2">
                   <Bot className="w-5 h-5 text-purple-600" />
                   <CardTitle className="text-lg">AI Assistant</CardTitle>
-                  <Badge variant="outline" className="text-xs">Online</Badge>
+                  <Badge variant="outline" className="text-xs">
+                    Online
+                  </Badge>
                 </div>
                 <Button
                   variant="outline"
@@ -192,22 +294,31 @@ const ChatPage = () => {
                 {messages.map((message) => (
                   <div
                     key={message.id}
-                    className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                    className={`flex ${
+                      message.role === "user" ? "justify-end" : "justify-start"
+                    }`}
                   >
                     <div
                       className={`max-w-[80%] rounded-2xl px-4 py-3 ${
-                        message.role === 'user'
-                          ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white'
+                        message.role === "user"
+                          ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white"
                           : message.isError
-                          ? 'bg-red-50 text-red-700 border border-red-200'
-                          : 'bg-slate-100 text-slate-900'
+                          ? "bg-red-50 text-red-700 border border-red-200"
+                          : "bg-slate-100 text-slate-900"
                       }`}
                     >
                       <div className="flex items-start space-x-2">
-                        {message.role === 'assistant' && (
-                          <Bot className="w-5 h-5 mt-0.5 text-purple-600 flex-shrink-0" />
+                        {message.role === "assistant" && (
+                          <Bot
+                            className={`w-5 h-5 mt-0.5 flex-shrink-0 ${
+                              message.isStreaming ? "animate-pulse" : ""
+                            } text-purple-600`}
+                          />
                         )}
-                        {message.role === 'user' && (
+                        {message.isStreaming && (
+                          <span className="animate-pulse">▌</span>
+                        )}
+                        {message.role === "user" && (
                           <User className="w-5 h-5 mt-0.5 text-blue-100 flex-shrink-0" />
                         )}
                         <div className="flex-1 min-w-0">
@@ -215,28 +326,33 @@ const ChatPage = () => {
                             {message.content}
                           </div>
                           <div className="flex items-center justify-between mt-2">
-                            <span className={`text-xs ${
-                              message.role === 'user' ? 'text-blue-100' : 'text-slate-500'
-                            }`}>
+                            <span
+                              className={`text-xs ${
+                                message.role === "user"
+                                  ? "text-blue-100"
+                                  : "text-slate-500"
+                              }`}
+                            >
                               {formatTime(message.timestamp)}
                             </span>
-                            {message.role === 'assistant' && !message.isError && (
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => copyMessage(message.content)}
-                                className="h-6 px-2 text-slate-400 hover:text-slate-600"
-                              >
-                                <Copy className="w-3 h-3" />
-                              </Button>
-                            )}
+                            {message.role === "assistant" &&
+                              !message.isError && (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => copyMessage(message.content)}
+                                  className="h-6 px-2 text-slate-400 hover:text-slate-600"
+                                >
+                                  <Copy className="w-3 h-3" />
+                                </Button>
+                              )}
                           </div>
                         </div>
                       </div>
                     </div>
                   </div>
                 ))}
-                
+
                 {loading && (
                   <div className="flex justify-start">
                     <div className="bg-slate-100 text-slate-900 rounded-2xl px-4 py-3 max-w-[80%]">
@@ -244,14 +360,20 @@ const ChatPage = () => {
                         <Bot className="w-5 h-5 text-purple-600" />
                         <div className="flex space-x-1">
                           <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce"></div>
-                          <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
-                          <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+                          <div
+                            className="w-2 h-2 bg-slate-400 rounded-full animate-bounce"
+                            style={{ animationDelay: "0.1s" }}
+                          ></div>
+                          <div
+                            className="w-2 h-2 bg-slate-400 rounded-full animate-bounce"
+                            style={{ animationDelay: "0.2s" }}
+                          ></div>
                         </div>
                       </div>
                     </div>
                   </div>
                 )}
-                
+
                 <div ref={messagesEndRef} />
               </div>
             </ScrollArea>
@@ -285,7 +407,9 @@ const ChatPage = () => {
           <Card className="border-0 shadow-lg">
             <CardHeader>
               <CardTitle className="text-lg">Quick Actions</CardTitle>
-              <CardDescription>Popular questions to get started</CardDescription>
+              <CardDescription>
+                Popular questions to get started
+              </CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
               {quickPrompts.map((prompt, index) => (
@@ -297,9 +421,7 @@ const ChatPage = () => {
                   disabled={loading}
                 >
                   <div className="flex items-start space-x-3">
-                    <div className="text-purple-600 mt-0.5">
-                      {prompt.icon}
-                    </div>
+                    <div className="text-purple-600 mt-0.5">{prompt.icon}</div>
                     <span className="text-sm">{prompt.text}</span>
                   </div>
                 </Button>

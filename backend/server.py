@@ -42,6 +42,37 @@ api_router = APIRouter(prefix="/api")
 # Gemini API key
 GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY')
 
+# Configure Gemini API
+if not GEMINI_API_KEY:
+    raise ValueError("GEMINI_API_KEY environment variable is not set")
+
+try:
+    genai.configure(api_key=GEMINI_API_KEY)
+    # List available models first
+    models = [m.name for m in genai.list_models()]
+    print("Available models:", models)
+    
+    # Use a suitable model from the available list
+    model_name = next((m for m in models if "gemini-2.5-pro" in m), None)
+    if not model_name:
+        model_name = next((m for m in models if "gemini" in m.lower()), None)
+    if not model_name:
+        raise Exception("No Gemini model available")
+    
+    print("Selected model:", model_name)
+    model = genai.GenerativeModel(model_name)
+    
+    # Don't test the connection at startup to avoid using up quota
+    print("Gemini API configured successfully with model:", model_name)
+except Exception as e:
+    if "quota exceeded" in str(e).lower() or "429" in str(e):
+        print("Warning: API quota exceeded. The chatbot will work again after the quota resets.")
+        print("Consider upgrading to a paid tier for higher quotas: https://ai.google.dev/pricing")
+    else:
+        print("Gemini API configuration failed")
+        print(f"Error: {str(e)}")
+        raise
+
 # ============= MODELS =============
 
 class User(BaseModel):
@@ -140,7 +171,7 @@ async def generate_ai_answer(question_text: str, correct_answer: str, explanatio
         prompt += f"Correct Answer: {correct_answer}\n\nProvide a comprehensive explanation of this answer."
 
         model = genai.GenerativeModel("gemini-2.0-flash")
-        response = model.generate_content(prompt)
+        response = model.generate_content(prompt, stream=True)
         # Gemini responses may be synchronous; if used within async, wrap with a thread executor if needed.
         return response.text if hasattr(response, "text") else correct_answer
     except Exception as e:
@@ -158,9 +189,13 @@ async def validate_answer_with_ai(question_text: str, correct_answer: str, user_
             "Respond with only 'CORRECT' or 'INCORRECT'."
         )
         model = genai.GenerativeModel("gemini-2.0-flash")
-        response = model.generate_content(prompt)
-        result_text = response.text if hasattr(response, "text") else ""
-        return "CORRECT" in result_text.upper()
+        response = model.generate_content(prompt, stream=True)
+        async for chunk in response:
+            result_text = chunk.text if hasattr(chunk, "text") else ""
+            if "CORRECT" in result_text.upper():
+                return True
+            elif "INCORRECT" in result_text.upper():
+                return False
     except Exception as e:
         logging.error(f"AI validation error: {str(e)}")
         return user_answer.lower().strip() == correct_answer.lower().strip()
@@ -550,19 +585,131 @@ async def get_checklist(user_id: str):
     }
 
 # AI Chat Routes
+from fastapi.responses import StreamingResponse
+import json
+import asyncio
+
+def generate_stream_response(prompt, model, generation_config, safety_settings):
+    try:
+        response = model.generate_content(
+            prompt,
+            generation_config=generation_config,
+            safety_settings=safety_settings,
+            stream=True
+        )
+        
+        for chunk in response:
+            if hasattr(chunk, 'text'):
+                yield f"data: {json.dumps({'chunk': chunk.text})}\n\n"
+        # CRUCIAL: End the SSE stream so the client UI knows it's done!
+        yield "data: [DONE]\n\n"
+    except Exception as e:
+        error_msg = str(e)
+        if "quota" in error_msg.lower() or "429" in error_msg:
+            yield f"data: {json.dumps({'error': 'Rate limit exceeded. Please wait a minute before trying again.'})}\n\n"
+        else:
+            yield f"data: {json.dumps({'error': str(e)})}\n\n"
+        # Also mark done event on error!
+        yield "data: [DONE]\n\n"
+
+
 @api_router.post("/ai/chat")
 async def ai_chat(chat_data: AIChat):
+    if not chat_data.message.strip():
+        raise HTTPException(status_code=400, detail="Message cannot be empty")
+        
     try:
         prompt = (
             "You are a helpful interview preparation assistant. Help users with their interview questions, provide study tips, and motivate them.\n\n"
             f"User: {chat_data.message}"
         )
-        model = genai.GenerativeModel("gemini-2.0-flash")
-        response = model.generate_content(prompt)
-        return {"response": response.text if hasattr(response, "text") else ""}
+        
+        # Use gemini-2.5-pro model
+        model_name = "models/gemini-2.5-pro"
+        try:
+            models = [m.name for m in genai.list_models()]
+            if model_name not in models:
+                model_name = next((m for m in models if "gemini-2.5-pro" in m.lower()), None)
+                if not model_name:
+                    model_name = next((m for m in models if "gemini" in m.lower()), None)
+                if not model_name:
+                    raise Exception("No Gemini model available")
+        except Exception as e:
+            logging.error(f"Error listing models: {str(e)}")
+            # Fallback to default model name
+            pass
+            
+        model = genai.GenerativeModel(model_name)
+        
+        # Add safety settings
+        safety_settings = [
+            {
+                "category": "HARM_CATEGORY_HARASSMENT",
+                "threshold": "BLOCK_MEDIUM_AND_ABOVE"
+            },
+            {
+                "category": "HARM_CATEGORY_HATE_SPEECH",
+                "threshold": "BLOCK_MEDIUM_AND_ABOVE"
+            }
+        ]
+        
+        generation_config = {
+            "temperature": 0.7,
+            "top_p": 0.8,
+            "top_k": 40,
+            "max_output_tokens": 2048,
+        }
+        
+        # Return streaming response
+        return StreamingResponse(
+            generate_stream_response(prompt, model, generation_config, safety_settings),
+            media_type="text/event-stream"
+        )
+        
     except Exception as e:
-        logging.error(f"AI chat error: {str(e)}")
-        raise HTTPException(status_code=500, detail="AI chat error")
+        error_message = str(e)
+        logging.error(f"AI chat error: {error_message}")
+        
+        if "429" in error_message or "quota exceeded" in error_message.lower():
+            # Extract retry delay if available
+            import re
+            retry_seconds = 60  # Default to 60 seconds
+            delay_match = re.search(r"retry in (\d+\.?\d*)", error_message.lower())
+            if delay_match:
+                retry_seconds = round(float(delay_match.group(1)))
+            
+            raise HTTPException(
+                status_code=429,
+                detail=f"The service is temporarily unavailable due to high demand. Please wait {retry_seconds} seconds before trying again."
+            )
+        
+        if "api_key" in error_message.lower():
+            raise HTTPException(
+                status_code=500,
+                detail="API configuration error. Please contact support."
+            )
+        elif "quota" in error_message.lower() or "429" in error_message:
+            # Extract retry delay from error message if available
+            import re
+            retry_delay = 60  # default to 60 seconds
+            delay_match = re.search(r"retry in (\d+\.?\d*)", error_message.lower())
+            if delay_match:
+                retry_delay = round(float(delay_match.group(1)))
+            
+            raise HTTPException(
+                status_code=429,
+                detail=f"The service is temporarily unavailable due to high demand. Please try again in {retry_delay} seconds."
+            )
+        elif "blocked" in error_message.lower():
+            raise HTTPException(
+                status_code=400,
+                detail="Content was blocked by safety settings. Please rephrase your message."
+            )
+        else:
+            raise HTTPException(
+                status_code=500,
+                detail="An error occurred. Please try again later."
+            )
 
 # Get available topics and companies
 @api_router.get("/metadata/topics")
