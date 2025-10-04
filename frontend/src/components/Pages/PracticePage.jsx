@@ -219,14 +219,17 @@ const PracticePage = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="difficulty">Difficulty Level</Label>
+                  <Label id="difficulty-label">Difficulty Level</Label>
                   <Select
                     value={quizConfig.difficulty}
                     onValueChange={(value) =>
                       handleConfigChange("difficulty", value)
                     }
                   >
-                    <SelectTrigger className="h-12">
+                    <SelectTrigger
+                      className="h-12"
+                      aria-labelledby="difficulty-label"
+                    >
                       <SelectValue placeholder="All Levels" />
                     </SelectTrigger>
                     <SelectContent>

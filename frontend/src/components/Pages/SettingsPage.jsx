@@ -269,14 +269,14 @@ const SettingsPage = () => {
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="defaultQuestions">Default Questions</Label>
+                  <Label id="defaultQuestions">Default Questions</Label>
                   <Select
                     value={settings.defaultQuestions.toString()}
                     onValueChange={(value) =>
                       handleSettingChange("defaultQuestions", parseInt(value))
                     }
                   >
-                    <SelectTrigger>
+                    <SelectTrigger aria-labelledby="defaultQuestions">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -290,14 +290,14 @@ const SettingsPage = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="defaultDifficulty">Default Difficulty</Label>
+                  <Label id="defaultDifficulty">Default Difficulty</Label>
                   <Select
                     value={settings.defaultDifficulty}
                     onValueChange={(value) =>
                       handleSettingChange("defaultDifficulty", value)
                     }
                   >
-                    <SelectTrigger>
+                    <SelectTrigger aria-labelledby="defaultDifficulty">
                       <SelectValue placeholder="All Levels" />
                     </SelectTrigger>
                     <SelectContent>
