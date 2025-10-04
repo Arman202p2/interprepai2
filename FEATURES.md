@@ -3,6 +3,7 @@
 ## 🎯 Core Features Implemented
 
 ### 1. User Management
+
 - ✅ User Registration with email, username, password
 - ✅ User Login with credential validation
 - ✅ Topic Selection (from available topics)
@@ -11,6 +12,7 @@
 - ✅ Update topics and companies anytime
 
 ### 2. Question Bank System
+
 - ✅ 20+ Pre-seeded questions across multiple topics
 - ✅ Question types: MCQ (Multiple Choice) and Descriptive
 - ✅ Difficulty levels: Easy, Medium, Hard, Very Hard
@@ -21,6 +23,7 @@
 - ✅ Manual question addition support
 
 ### 3. Smart Quiz System
+
 - ✅ Configurable number of questions (no limit)
 - ✅ Filter by topics (multiple selection)
 - ✅ Filter by difficulty level
@@ -35,6 +38,7 @@
 - ✅ Answer persistence while navigating
 
 ### 4. AI Integration (Gemini 2.0 Flash)
+
 - ✅ AI-generated answers for all questions
 - ✅ AI validation for descriptive answers (non-MCQ)
 - ✅ Modern AI chatbot assistant for interview prep help
@@ -42,6 +46,7 @@
 - ✅ Study tips and motivation from AI
 
 ### 5. Analytics & Performance Tracking (Real, Not Fake)
+
 - ✅ Total quizzes completed
 - ✅ Total questions answered
 - ✅ Correct answers count
@@ -52,6 +57,7 @@
 - ✅ Visual progress bars
 
 ### 6. Checklist System
+
 - ✅ Topic-wise question tracking
 - ✅ Shows completed vs pending questions per topic
 - ✅ Completion percentage per topic
@@ -59,12 +65,14 @@
 - ✅ Total questions answered across all topics
 
 ### 7. College Placement Features
+
 - ✅ Target company selection
 - ✅ Company-specific question filtering
 - ✅ Multiple company selection/deselection
 - ✅ Company-wise question bank
 
 ### 8. Modern UI/UX
+
 - ✅ Beautiful gradient design
 - ✅ Responsive layout
 - ✅ Smooth transitions and animations
@@ -75,6 +83,7 @@
 - ✅ Intuitive navigation
 
 ### 9. Question Sourcing
+
 - ✅ Questions from multiple sources:
   - TCYOnline
   - PrepInsta
@@ -86,6 +95,7 @@
 ## 📊 Database Collections
 
 ### Users Collection
+
 ```javascript
 {
   id: "uuid",
@@ -102,6 +112,7 @@
 ```
 
 ### Questions Collection
+
 ```javascript
 {
   id: "uuid",
@@ -122,6 +133,7 @@
 ```
 
 ### Quiz Attempts Collection
+
 ```javascript
 {
   id: "uuid",
@@ -138,6 +150,7 @@
 ```
 
 ## 🎨 Available Topics
+
 - Python
 - JavaScript
 - Data Structures
@@ -150,6 +163,7 @@
 - System Design
 
 ## 🏢 Available Companies
+
 - Google
 - Microsoft
 - Amazon
@@ -168,15 +182,17 @@
 - Juniper
 
 ## 🔧 Technical Stack
+
 - **Backend**: FastAPI (Python)
 - **Frontend**: React with Tailwind CSS
 - **Database**: MongoDB
 - **AI**: Google Gemini 2.0 Flash
-- **Libraries**:  beautifulsoup4, selenium
+- **Libraries**: beautifulsoup4, selenium
 
 ## 🚀 API Endpoints
 
 ### User Management
+
 - `POST /api/users/register` - Register new user
 - `POST /api/users/login` - Login user
 - `GET /api/users/{user_id}` - Get user details
@@ -184,31 +200,38 @@
 - `PUT /api/users/{user_id}/companies` - Update companies
 
 ### Questions
+
 - `GET /api/questions` - Get all questions (with filters)
 - `GET /api/questions/{question_id}` - Get specific question
 - `POST /api/questions` - Add new question
 
 ### Quiz
+
 - `POST /api/quiz/start` - Start new quiz
 - `POST /api/quiz/submit` - Submit quiz answers
 - `GET /api/quiz/{quiz_id}/results` - Get quiz results
 
 ### Analytics
+
 - `GET /api/analytics/{user_id}` - Get user analytics
 
 ### Checklist
+
 - `GET /api/checklist/{user_id}` - Get progress checklist
 
 ### AI Chat
+
 - `POST /api/ai/chat` - Chat with AI assistant
 
 ### Metadata
+
 - `GET /api/metadata/topics` - Get available topics
 - `GET /api/metadata/companies` - Get available companies
 
 ## ✅ All Requirements Met
 
 ### Update 1 Requirements ✅
+
 - ✅ Full mentor list provided (AI integration)
 - ✅ Source of questions included in all questions
 - ✅ Full answer in explanation provided
@@ -223,6 +246,7 @@
 - ✅ No limit on number of questions
 
 ### Update 2 Requirements ✅
+
 - ✅ Website remains same while making changes
 - ✅ Multiple questions appearing (configurable)
 - ✅ Time based on answer length
