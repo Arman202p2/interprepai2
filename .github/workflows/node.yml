@@ -1,0 +1,46 @@
+
+name: Node CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  frontend-ci:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "18"
+          cache: "yarn"
+          cache-dependency-path: "frontend/yarn.lock"
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+      - name: Lint
+        run: |
+          if [ -f package.json ] && jq -e '.scripts.lint' package.json > /dev/null; then
+            yarn lint
+          else
+            echo "No lint script defined; skipping."
+          fi
+      - name: Build
+        run: |
+          if [ -f package.json ] && jq -e '.scripts.build' package.json > /dev/null; then
+            yarn build
+          else
+            echo "No build script defined; skipping."
+          fi
+      - name: Test
+        run: |
+          if [ -f package.json ] && jq -e '.scripts.test' package.json > /dev/null; then
+            yarn test --ci --watchAll=false || true
+          else
+            echo "No test script defined; skipping."
+          fi

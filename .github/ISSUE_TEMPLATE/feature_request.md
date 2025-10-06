@@ -26,4 +26,3 @@ Environment
 
 Additional context
 Add any other context, screenshots, or logs here.
-
