@@ -7,3 +7,4 @@ uvicorn server:app --reload
 open window terminal or cmd
 cd interprepai/frontend
 yarn start
+yarn add posthog-node

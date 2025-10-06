@@ -1,6 +1,5 @@
 import React, { useState, useEffect, createContext, useContext } from "react";
 import {
-  BrowserRouter as Router,
   Routes,
   Route,
   Navigate,
@@ -15,7 +14,7 @@ import posthog from "posthog-js";
 posthog.init(process.env.REACT_APP_POSTHOG_KEY, {
   api_host: "https://app.posthog.com",
 });
-const ENV_TAG = process.env.NODE_ENV; // 'development' or 'production'
+const ENV_TAG = process.env.NODE_ENV;
 // --------------------------------
 
 // Layout Components
@@ -41,7 +40,7 @@ export const useAppContext = () => {
   const context = useContext(AppContext);
   if (!context) {
     throw new Error("useAppContext must be used within AppProvider");
-    }
+  }
   return context;
 };
 
@@ -56,7 +55,7 @@ function App() {
   const [availableCompanies, setAvailableCompanies] = useState([]);
   const [mentors, setMentors] = useState([]);
 
-  const location = useLocation();
+  const location = useLocation(); // ✅ Now works because Router wraps App
 
   // -------- Check for user/session & load metadata --------
   useEffect(() => {
@@ -70,7 +69,6 @@ function App() {
       }
     }
     loadMetadata();
-    // Track app loaded (once)
     posthog.capture("app_loaded", { env: ENV_TAG });
   }, []);
 
@@ -111,7 +109,6 @@ function App() {
   };
 
   const loadMentors = async () => {
-    // Mock mentor data
     const mockMentors = [
       {
         id: 1,
@@ -187,12 +184,12 @@ function App() {
     setMentors(mockMentors);
   };
 
-  // -------- Login/Logout with analytics --------
   const login = async (userData) => {
     setCurrentUser(userData);
     localStorage.setItem("currentUser", JSON.stringify(userData));
     posthog.capture("user_login", { env: ENV_TAG, ...userData });
   };
+
   const logout = () => {
     setCurrentUser(null);
     localStorage.removeItem("currentUser");
@@ -226,73 +223,69 @@ function App() {
 
   return (
     <AppContext.Provider value={contextValue}>
-      <Router>
-        <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
-          <Routes>
-            <Route
-              path="/login"
-              element={
-                !currentUser ? <LoginPage /> : <Navigate to="/dashboard" />
-              }
-            />
-            <Route
-              path="/register"
-              element={
-                !currentUser ? <RegisterPage /> : <Navigate to="/dashboard" />
-              }
-            />
-            <Route
-              path="/dashboard"
-              element={currentUser ? <Dashboard /> : <Navigate to="/login" />}
-            />
-            <Route
-              path="/mentors"
-              element={currentUser ? <MentorsPage /> : <Navigate to="/login" />}
-            />
-            <Route
-              path="/practice"
-              element={
-                currentUser ? <PracticePage /> : <Navigate to="/login" />
-              }
-            />
-            <Route
-              path="/quiz"
-              element={currentUser ? <QuizPage /> : <Navigate to="/login" />}
-            />
-            <Route
-              path="/checklist"
-              element={
-                currentUser ? <ChecklistPage /> : <Navigate to="/login" />
-              }
-            />
-            <Route
-              path="/history"
-              element={currentUser ? <HistoryPage /> : <Navigate to="/login" />}
-            />
-            <Route
-              path="/chat"
-              element={currentUser ? <ChatPage /> : <Navigate to="/login" />}
-            />
-            <Route
-              path="/settings"
-              element={
-                currentUser ? <SettingsPage /> : <Navigate to="/login" />
-              }
-            />
-            <Route
-              path="/"
-              element={<Navigate to={currentUser ? "/dashboard" : "/login"} />}
-            />
-          </Routes>
-          {currentUser && (
-            <>
-              <Navigation />
-              <MobileNav />
-            </>
-          )}
-          <Toaster position="top-right" theme="light" richColors closeButton />
-        </div>
-      </Router>
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
+        <Routes>
+          <Route
+            path="/login"
+            element={
+              !currentUser ? <LoginPage /> : <Navigate to="/dashboard" />
+            }
+          />
+          <Route
+            path="/register"
+            element={
+              !currentUser ? <RegisterPage /> : <Navigate to="/dashboard" />
+            }
+          />
+          <Route
+            path="/dashboard"
+            element={currentUser ? <Dashboard /> : <Navigate to="/login" />}
+          />
+          <Route
+            path="/mentors"
+            element={currentUser ? <MentorsPage /> : <Navigate to="/login" />}
+          />
+          <Route
+            path="/practice"
+            element={currentUser ? <PracticePage /> : <Navigate to="/login" />}
+          />
+          <Route
+            path="/quiz"
+            element={currentUser ? <QuizPage /> : <Navigate to="/login" />}
+          />
+          <Route
+            path="/checklist"
+            element={
+              currentUser ? <ChecklistPage /> : <Navigate to="/login" />
+            }
+          />
+          <Route
+            path="/history"
+            element={currentUser ? <HistoryPage /> : <Navigate to="/login" />}
+          />
+          <Route
+            path="/chat"
+            element={currentUser ? <ChatPage /> : <Navigate to="/login" />}
+          />
+          <Route
+            path="/settings"
+            element={
+              currentUser ? <SettingsPage /> : <Navigate to="/login" />
+            }
+          />
+          <Route
+            path="/"
+            element={<Navigate to={currentUser ? "/dashboard" : "/login"} />}
+          />
+        </Routes>
+        {currentUser && (
+          <>
+            <Navigation />
+            <MobileNav />
+          </>
+        )}
+        <Toaster position="top-right" theme="light" richColors closeButton />
+      </div>
     </AppContext.Provider>
   );
 }
