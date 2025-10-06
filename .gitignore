@@ -1,14 +1,20 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
-# IDE and editors
+# ============================================
+# IDE and Editors
+# ============================================
 .idea/
 .vscode/
+.ipynb_checkpoints/
 
+# ============================================
 # Dependencies
+# ============================================
 node_modules/
-/node_modules
 /.pnp
 .pnp.js
+
+# Yarn
 .yarn/install-state.gz
 .yarn/*
 !.yarn/patches
@@ -19,59 +25,97 @@ node_modules/
 # Node dependency manager lockfiles
 package-lock.json
 
-# Coverage output
+# ============================================
+# Testing and Coverage
+# ============================================
 /coverage
 coverage*
 
-# Testing
-/coverage
-
+# ============================================
 # Next.js
+# ============================================
 /.next/
 /out/
 next-env.d.ts
 *.tsbuildinfo
 
-# Production builds
+# ============================================
+# Production Builds
+# ============================================
 /build
 dist/
 dist
 
-# Environment files (comprehensive coverage)
-
+# ============================================
+# Environment and Credentials
+# ============================================
+.env
+*.env
+*.env.*
 *token.json*
 *credentials.json*
 
-# Logs and debug files
+# ============================================
+# Logs and Debug Files
+# ============================================
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 dump.rdb
 
-# System files
+# ============================================
+# System Files
+# ============================================
+# macOS
 .DS_Store
+.AppleDouble
+.LSOverride
+.Trashes
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+Desktop.ini
+
+# Linux
+*~
+
+# General
 *.pem
 
+# ============================================
 # Python
+# ============================================
 __pycache__/
 *pyc*
 venv/
 .venv/
 
-# Development tools
+# ============================================
+# Development Tools
+# ============================================
 chainlit.md
 .chainlit
-.ipynb_checkpoints/
 .ac
 
+# ============================================
 # Deployment
+# ============================================
 .vercel
 
-# Data and databases
+# ============================================
+# Data and Databases
+# ============================================
 agenthub/agents/youtube/db
+*.sqlite
+*.sqlite3
+*.db
 
-# Archive files and large assets
+# ============================================
+# Archive Files and Large Assets
+# ============================================
 **/*.zip
 **/*.tar.gz
 **/*.tar
@@ -80,14 +124,17 @@ agenthub/agents/youtube/db
 *.deb
 *.dylib
 
-# Build caches
+# ============================================
+# Build Caches
+# ============================================
 .cache/
 
-# Mobile development
+# ============================================
+# Mobile Development
+# ============================================
 android-sdk/
 
-# Environment files
-.env
-*.env
-*.env.*
-
+# ============================================
+# Docker and Process Files
+# ============================================
+*.pid
