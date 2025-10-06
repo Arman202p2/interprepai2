@@ -136,7 +136,7 @@ const QuizPage = () => {
     posthog.capture("quiz_question_answered", {
       env: ENV_TAG,
       quiz_id: quizData.quiz_id,
-      question_id,
+      question_id: currentQuestion.id,
       user_id: currentUser?.id || currentUser?.email,
       mentor_id: config?.mentor_id,
       answer,
@@ -208,7 +208,7 @@ const QuizPage = () => {
         quiz_id: quizData.quiz_id,
         user_id: currentUser?.id || currentUser?.email,
         mentor_id: config?.mentor_id,
-        question_id,
+        question_id: currentQuestion.id,
         question_index: currentQuestionIndex,
         action,
         timestamp: Date.now(),
@@ -313,19 +313,30 @@ const QuizPage = () => {
           <CardContent className="p-6">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
               <div>
-                <h1 className="text-2xl font-bold text-slate-900 mb-2">Quiz in Progress</h1>
+                <h1 className="text-2xl font-bold text-slate-900 mb-2">
+                  Quiz in Progress
+                </h1>
                 {mentor && (
                   <p className="text-slate-600">
-                    Questions curated by <span className="font-semibold">{mentor.name}</span>
+                    Questions curated by{" "}
+                    <span className="font-semibold">{mentor.name}</span>
                   </p>
                 )}
               </div>
-              
+
               <div className="flex items-center space-x-4">
                 {timerActive && (
                   <div className="flex items-center space-x-2">
-                    <Clock className={`w-5 h-5 ${timeRemaining < 30 ? 'text-red-500' : 'text-blue-600'}`} />
-                    <span className={`text-lg font-bold ${timeRemaining < 30 ? 'text-red-500' : 'text-blue-600'}`}>
+                    <Clock
+                      className={`w-5 h-5 ${
+                        timeRemaining < 30 ? "text-red-500" : "text-blue-600"
+                      }`}
+                    />
+                    <span
+                      className={`text-lg font-bold ${
+                        timeRemaining < 30 ? "text-red-500" : "text-blue-600"
+                      }`}
+                    >
                       {formatTime(timeRemaining)}
                     </span>
                     <Button
@@ -337,7 +348,7 @@ const QuizPage = () => {
                     </Button>
                   </div>
                 )}
-                
+
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
                     <Button variant="destructive" size="sm">
@@ -348,7 +359,8 @@ const QuizPage = () => {
                     <AlertDialogHeader>
                       <AlertDialogTitle>End Quiz?</AlertDialogTitle>
                       <AlertDialogDescription>
-                        Are you sure you want to end this quiz? Your progress will be saved.
+                        Are you sure you want to end this quiz? Your progress
+                        will be saved.
                       </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
@@ -366,7 +378,8 @@ const QuizPage = () => {
             <div className="mt-4">
               <div className="flex justify-between items-center mb-2">
                 <span className="text-sm text-slate-600">
-                  Question {currentQuestionIndex + 1} of {quizData.questions.length}
+                  Question {currentQuestionIndex + 1} of{" "}
+                  {quizData.questions.length}
                 </span>
                 <span className="text-sm text-slate-600">
                   {Math.round(progress)}% Complete
@@ -384,12 +397,17 @@ const QuizPage = () => {
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-3">
-                    <Badge variant={
-                      currentQuestion.difficulty === 'Easy' ? 'default' :
-                      currentQuestion.difficulty === 'Medium' ? 'secondary' :
-                      currentQuestion.difficulty === 'Hard' ? 'destructive' :
-                      'destructive'
-                    }>
+                    <Badge
+                      variant={
+                        currentQuestion.difficulty === "Easy"
+                          ? "default"
+                          : currentQuestion.difficulty === "Medium"
+                          ? "secondary"
+                          : currentQuestion.difficulty === "Hard"
+                          ? "destructive"
+                          : "destructive"
+                      }
+                    >
                       {currentQuestion.difficulty}
                     </Badge>
                     <Badge variant="outline">{currentQuestion.topic}</Badge>
@@ -397,15 +415,25 @@ const QuizPage = () => {
                       <Badge variant="outline">{currentQuestion.company}</Badge>
                     )}
                   </div>
-                  
+
                   <div className="flex items-center space-x-2">
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={handleFlag}
-                      className={flaggedQuestions.has(currentQuestion.id) ? 'bg-yellow-100' : ''}
+                      className={
+                        flaggedQuestions.has(currentQuestion.id)
+                          ? "bg-yellow-100"
+                          : ""
+                      }
                     >
-                      <Flag className={`w-4 h-4 ${flaggedQuestions.has(currentQuestion.id) ? 'text-yellow-600' : ''}`} />
+                      <Flag
+                        className={`w-4 h-4 ${
+                          flaggedQuestions.has(currentQuestion.id)
+                            ? "text-yellow-600"
+                            : ""
+                        }`}
+                      />
                     </Button>
                   </div>
                 </div>
@@ -417,10 +445,16 @@ const QuizPage = () => {
                   <h3 className="text-lg font-semibold text-slate-900 mb-4">
                     {currentQuestion.text}
                   </h3>
-                  
+
                   {currentQuestion.source_url && (
                     <p className="text-sm text-slate-500 mb-4">
-                      Source: <a href={currentQuestion.source_url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+                      Source:{" "}
+                      <a
+                        href={currentQuestion.source_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-600 hover:underline"
+                      >
                         {currentQuestion.source_name || "View Source"}
                       </a>
                     </p>
@@ -429,16 +463,28 @@ const QuizPage = () => {
 
                 {/* Answer Interface */}
                 <div>
-                  {currentQuestion.question_type === 'mcq' && currentQuestion.options ? (
+                  {currentQuestion.question_type === "mcq" &&
+                  currentQuestion.options ? (
                     <RadioGroup
                       value={userAnswers[currentQuestion.id] || ""}
-                      onValueChange={(value) => handleAnswerChange(currentQuestion.id, value)}
+                      onValueChange={(value) =>
+                        handleAnswerChange(currentQuestion.id, value)
+                      }
                     >
                       <div className="space-y-3">
                         {currentQuestion.options.map((option, index) => (
-                          <div key={index} className="flex items-center space-x-3 p-3 border border-slate-200 rounded-lg hover:bg-slate-50 cursor-pointer">
-                            <RadioGroupItem value={option} id={`option-${index}`} />
-                            <Label htmlFor={`option-${index}`} className="flex-1 cursor-pointer">
+                          <div
+                            key={index}
+                            className="flex items-center space-x-3 p-3 border border-slate-200 rounded-lg hover:bg-slate-50 cursor-pointer"
+                          >
+                            <RadioGroupItem
+                              value={option}
+                              id={`option-${index}`}
+                            />
+                            <Label
+                              htmlFor={`option-${index}`}
+                              className="flex-1 cursor-pointer"
+                            >
                               {option}
                             </Label>
                           </div>
@@ -447,13 +493,18 @@ const QuizPage = () => {
                     </RadioGroup>
                   ) : (
                     <div>
-                      <Label htmlFor="free-text" className="text-sm font-medium text-slate-700 mb-2 block">
+                      <Label
+                        htmlFor="free-text"
+                        className="text-sm font-medium text-slate-700 mb-2 block"
+                      >
                         Your Answer:
                       </Label>
                       <Textarea
                         id="free-text"
-                        value={userAnswers[currentQuestion.id] || ''}
-                        onChange={(e) => handleAnswerChange(currentQuestion.id, e.target.value)}
+                        value={userAnswers[currentQuestion.id] || ""}
+                        onChange={(e) =>
+                          handleAnswerChange(currentQuestion.id, e.target.value)
+                        }
                         placeholder="Type your answer here..."
                         className="min-h-[120px]"
                       />
@@ -473,14 +524,11 @@ const QuizPage = () => {
                   </Button>
 
                   <div className="flex space-x-2">
-                    <Button
-                      variant="outline"
-                      onClick={handleSkip}
-                    >
+                    <Button variant="outline" onClick={handleSkip}>
                       <SkipForward className="w-4 h-4 mr-1" />
                       Skip
                     </Button>
-                    
+
                     {currentQuestionIndex === quizData.questions.length - 1 ? (
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
@@ -492,12 +540,16 @@ const QuizPage = () => {
                           <AlertDialogHeader>
                             <AlertDialogTitle>Submit Quiz?</AlertDialogTitle>
                             <AlertDialogDescription>
-                              You have answered {Object.keys(userAnswers).length} out of {quizData.questions.length} questions. 
-                              Are you ready to submit?
+                              You have answered{" "}
+                              {Object.keys(userAnswers).length} out of{" "}
+                              {quizData.questions.length} questions. Are you
+                              ready to submit?
                             </AlertDialogDescription>
                           </AlertDialogHeader>
                           <AlertDialogFooter>
-                            <AlertDialogCancel>Review Answers</AlertDialogCancel>
+                            <AlertDialogCancel>
+                              Review Answers
+                            </AlertDialogCancel>
                             <AlertDialogAction onClick={handleSubmitQuiz}>
                               Submit Quiz
                             </AlertDialogAction>
@@ -532,10 +584,15 @@ const QuizPage = () => {
                         onClick={() => jumpToQuestion(index)}
                         className={`
                           w-10 h-10 rounded-lg font-semibold text-sm transition-all
-                          ${status === 'current' ? 'bg-blue-600 text-white shadow-lg' :
-                            status === 'answered' ? 'bg-green-100 text-green-800 border-2 border-green-200' :
-                            status === 'flagged' ? 'bg-yellow-100 text-yellow-800 border-2 border-yellow-200' :
-                            'bg-slate-100 text-slate-600 hover:bg-slate-200'}
+                          ${
+                            status === "current"
+                              ? "bg-blue-600 text-white shadow-lg"
+                              : status === "answered"
+                              ? "bg-green-100 text-green-800 border-2 border-green-200"
+                              : status === "flagged"
+                              ? "bg-yellow-100 text-yellow-800 border-2 border-yellow-200"
+                              : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                          }
                         `}
                       >
                         {index + 1}
@@ -543,7 +600,7 @@ const QuizPage = () => {
                     );
                   })}
                 </div>
-                
+
                 {/* Legend */}
                 <div className="mt-4 space-y-2 text-xs">
                   <div className="flex items-center space-x-2">
