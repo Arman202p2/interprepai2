@@ -16,6 +16,13 @@ node_modules/
 !.yarn/releases
 !.yarn/versions
 
+# Node dependency manager lockfiles
+package-lock.json
+
+# Coverage output
+/coverage
+coverage*
+
 # Testing
 /coverage
 
@@ -77,11 +84,10 @@ agenthub/agents/youtube/db
 .cache/
 
 # Mobile development
-android-sdk/ -e 
+android-sdk/
+
 # Environment files
+.env
 *.env
 *.env.*
--e 
-# Environment files
-*.env
-*.env.*
+
