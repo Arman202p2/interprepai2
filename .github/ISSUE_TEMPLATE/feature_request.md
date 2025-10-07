@@ -1,28 +1,20 @@
+---
+name: Feature request
+about: Suggest an idea for this project
+title: ''
+labels: ''
+assignees: ''
 
-name: Bug report
-about: Create a report to help us improve
-labels: bug
-***
+---
 
-Description
-A clear and concise description of what the bug is.
+**Is your feature request related to a problem? Please describe.**
+A clear and concise description of what the problem is. Ex. I'm always frustrated when [...]
 
-Steps to Reproduce
-1. Go to '...'
-2. Click on '...'
-3. See error
+**Describe the solution you'd like**
+A clear and concise description of what you want to happen.
 
-Expected behavior
-What you expected to happen.
+**Describe alternatives you've considered**
+A clear and concise description of any alternative solutions or features you've considered.
 
-Actual behavior
-What actually happened (include errors/logs if possible).
-
-Environment
-- OS:
-- Browser:
-- Node/Python versions:
-- Commit/Tag:
-
-Additional context
-Add any other context, screenshots, or logs here.
+**Additional context**
+Add any other context or screenshots about the feature request here.
